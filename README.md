@@ -1,6 +1,6 @@
 # Custom URL Shortener
 
-A local-first URL shortener with a **FastAPI** backend, SQLite database, and a plain HTML/CSS/JavaScript frontend served by the API app. Features include API-key-protected link creation and analytics, public redirects with click logging, API-key requests, and an admin panel for approval, key generation, expiry, revocation, and global stats.
+A URL shortener with a **FastAPI** backend, local SQLite or Supabase PostgreSQL database, and a plain HTML/CSS/JavaScript frontend served by the API app. Features include API-key-protected link creation and analytics, public redirects with click logging, API-key requests, and an admin panel for approval, key generation, expiry, revocation, and global stats.
 
 ## Project structure
 
@@ -9,7 +9,8 @@ A local-first URL shortener with a **FastAPI** backend, SQLite database, and a p
 ├── backend/
 │   └── app/
 │       ├── main.py       # FastAPI routes, middleware/dependencies, and app setup
-│       ├── schema.sql    # SQLite schema
+│       ├── schema.sql    # Local SQLite schema
+│       ├── schema.postgres.sql # Supabase/PostgreSQL schema
 │       └── cli.py        # One-time API key creation utility
 ├── frontend/             # HTML, CSS, and browser JavaScript
 ├── data/                 # Local SQLite database (created automatically)
@@ -30,7 +31,7 @@ cp .env.example .env            # Windows: copy .env.example .env
 
 On Debian or Ubuntu, if creating the virtual environment reports that `venv` or `ensurepip` is missing, install it with `sudo apt update && sudo apt install python3-full`, then rerun `python3 -m venv .venv`.
 
-Edit `.env` and replace `ADMIN_PASSWORD` with a long, unique password. Start the app:
+Edit `.env` and replace `ADMIN_PASSWORD` with a long, unique password. Without `DATABASE_URL`, the app uses local SQLite. To use Supabase locally, set `DATABASE_URL` to your Supabase session-pooler connection string. Start the app:
 
 ```sh
 uvicorn backend.app.main:app --host 127.0.0.1 --port 3000 --reload
@@ -73,12 +74,14 @@ Create a Render **Web Service** from the Git repository. Set:
 - Start command: `uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT`
 - Health check path: `/health`
 
+For persistent hosted data without a Render disk, create a Supabase project and copy its **Session pooler** connection string from **Connect**. Render uses IPv4; Supabase's session pooler supports IPv4, while the direct database connection is IPv6 by default. [Supabase connection options](https://supabase.com/docs/guides/database/connecting-to-postgres)
+
 Configure these environment variables in Render:
 
 ```text
-DATABASE_PATH=/var/data/shortener.sqlite
+DATABASE_URL=<Supabase session-pooler URI, with sslmode=require>
 ADMIN_USER=your-admin-name
 ADMIN_PASSWORD=<a long, unique password>
 ```
 
-Render supplies `PORT` and `RENDER_EXTERNAL_URL`; the application uses the latter to generate short links and set the admin session cookie securely. Add a persistent disk mounted at `/var/data` so SQLite survives deploys and restarts. Render persistent disks require a paid service and limit the app to one service instance. Never commit `.env` or paste secrets into source control.
+The app creates its tables in Supabase when it starts. Store the URI only as the Render `DATABASE_URL` secret; do not put it in frontend code or commit it. Render supplies `PORT` and `RENDER_EXTERNAL_URL`; the app uses the latter to generate short links and set the admin session cookie securely. For local development, leave `DATABASE_URL` unset to use SQLite.
