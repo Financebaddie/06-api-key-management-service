@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin · URL Shortener</title><link rel="stylesheet" href="/styles.css"></head><body>
+<main class="shell wide">
+  <header class="admin-header"><div><div class="eyebrow">Control panel</div><h1>URL Shortener Admin</h1><p class="muted">Create, approve, and manage API access.</p></div><button class="secondary" id="logout">Log out</button></header>
+  <section class="stats"><article class="panel stat"><span>Short links created</span><strong id="total-links">0</strong></article><article class="panel stat"><span>Total clicks tracked</span><strong id="total-clicks">0</strong></article></section>
+  <p class="error hidden" id="page-error" role="alert"></p><p class="success hidden" id="new-key" role="status"></p>
+  <section class="panel"><div class="panel-heading"><h2>Create API key</h2><p>The key is shown once after creation. Leave expiration blank for no expiration.</p></div>
+    <form class="create-form" id="create-key-form">
+      <label>Owner name<input name="owner" maxlength="120" required></label>
+      <label>Email (optional)<input name="email" type="email" maxlength="254"></label>
+      <label>Expires on (optional)<input name="expiresAt" type="date"><small>Valid through end of selected UTC day.</small></label>
+      <button class="primary" type="submit">Create key</button>
+    </form>
+  </section>
+  <section class="panel"><div class="panel-heading"><h2>API key requests</h2><p>Approving creates an active key with the requested expiration date.</p></div>
+    <div class="table-wrap"><table><thead><tr><th>Requester</th><th>Purpose</th><th>Requested</th><th>Expiration</th><th>Status</th><th>Review</th></tr></thead><tbody id="requests"></tbody></table></div>
+  </section>
+  <section class="panel"><div class="panel-heading"><h2>API keys</h2><p>Grant or revoke access and update expiration dates.</p></div>
+    <div class="table-wrap"><table><thead><tr><th>Owner</th><th>Key prefix</th><th>Status</th><th>Links</th><th>Created</th><th>Access</th><th>Expiration</th></tr></thead><tbody id="keys"></tbody></table></div>
+  </section>
+</main><script type="module" src="/admin.js"></script></body></html>

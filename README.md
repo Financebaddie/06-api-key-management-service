@@ -1,72 +1,84 @@
-# API Key Management Service
+# Custom URL Shortener
 
-## Project Summary
-**Category:** Backend & APIs  
-**Difficulty:** Intermediate  
-**Suggested team split:** Key generation, authentication, permissions, audit logs 
+A local-first URL shortener with a **FastAPI** backend, SQLite database, and a plain HTML/CSS/JavaScript frontend served by the API app. Features include API-key-protected link creation and analytics, public redirects with click logging, API-key requests, and an admin panel for approval, key generation, expiry, revocation, and global stats.
 
-## Description
-This project is a good fit for a small team that wants to build something real and usable in a short amount of time. It focuses on one clear feature, clean data flow, and a simple user experience that can be demoed without extra fluff. The goal is to turn a good idea into a working MVP with a solid backend, a basic interface, and a realistic set of edge cases.
+## Project structure
 
-## Scope
-Issue, revoke, and expire API keys; enforce scopes and log usage.
+```text
+.
+├── backend/
+│   └── app/
+│       ├── main.py       # FastAPI routes, middleware/dependencies, and app setup
+│       ├── schema.sql    # SQLite schema
+│       └── cli.py        # One-time API key creation utility
+├── frontend/             # HTML, CSS, and browser JavaScript
+├── data/                 # Local SQLite database (created automatically)
+├── requirements.txt
+└── .env.example
+```
 
-## Core Features
-- Deliver the main user flow from start to finish.
-- Support the required data model and user interactions.
-- Handle validation, edge cases, and error states cleanly.
-- Include basic monitoring, feedback, or reporting where relevant.
-- Make the app easy to explain during a live demo.
+## Run locally
 
-## Deliverables
-- A working deployed application or API demo
-- A clear README with setup instructions and environment variables
-- A minimal database schema or data model definition
-- UI screens or API endpoints for the core MVP
-- A basic test strategy covering the happy path and one major failure path
-- A short demo script explaining the architecture, choices, and trade-offs
+Requires Python 3.10 or newer.
 
-## Suggested Architecture
-- Frontend: simple dashboard, form-based interface, or lightweight visual layer
-- Backend: API or service layer for business logic and validation
-- Data layer: database, in-memory persistence, or structured file storage for MVP use
-- Optional extras: auth, async jobs, scheduling, WebSockets, caching, or notifications depending on the project
+```sh
+python3 -m venv .venv
+source .venv/bin/activate       # Windows PowerShell: .venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+cp .env.example .env            # Windows: copy .env.example .env
+```
 
-## Learning Outcomes
-Authentication, authorization, secure token handling
+On Debian or Ubuntu, if creating the virtual environment reports that `venv` or `ensurepip` is missing, install it with `sudo apt update && sudo apt install python3-full`, then rerun `python3 -m venv .venv`.
 
-## Recommended MVP Checklist
-1. Define the main user flow and success criteria.
-2. Build the data model and core backend logic.
-3. Connect the UI or client to the main application flow.
-4. Add key validation, security checks, and realistic error states.
-5. Test the happy path and at least one important edge case.
-6. Deploy the app and document the setup clearly.
+Edit `.env` and replace `ADMIN_PASSWORD` with a long, unique password. Start the app:
 
-## Free Deployment Options
-Render, Railway, Fly.io, Cloud Run, or Supabase for database features.
+```sh
+uvicorn backend.app.main:app --host 127.0.0.1 --port 3000 --reload
+```
 
-## Good Free Hosting Choices
-- Static frontend: Vercel, Netlify, or GitHub Pages
-- API/backend: Render, Railway, or Fly.io
-- Database/realtime services: Supabase, Neon, Firebase, or Cloudflare D1
-- Documentation/demo pages: GitHub Pages, Cloudflare Pages, or Vercel
+Open `http://localhost:3000/`. The admin page is at `/admin` and login at `/admin/login`. Users can request a key at `/api-key/request`. To create a key directly from the command line:
 
-## Typical Tech Stack
-- Frontend: React, Next.js, plain HTML/JS, or similar lightweight UI tooling
-- Backend: Node.js, Python (Flask/FastAPI), or Java/Spring Boot
-- Database: Postgres, SQLite, Supabase, or a simple file-based store
-- Real-time layer: WebSockets, polling, or background workers if needed
+```sh
+python -m backend.app.cli "Local owner" owner@example.com
+```
 
-## Final Demo Expectations
-- Provide a working URL with sample or seeded data
-- Show one clear end-to-end flow from start to finish
-- Explain the most important technical decisions and trade-offs
-- Include screenshots, screen recordings, or a brief live walk-through
-- Highlight what was completed in the MVP and what would be next if the project continued
+The generated `sk_live_...` secret is printed once; the database stores only its SHA-256 hash.
 
-## Next Improvements
-- Add authorization, auditing, or stronger validation
-- Improve test coverage and resilience
-- Add analytics, metrics, or observability
-- Expand functionality once the core MVP is stable
+## API
+
+Shorten a link (send the key in `x-api-key` or as a Bearer token):
+
+```sh
+curl -X POST http://localhost:3000/api/v1/shorten \
+  -H 'content-type: application/json' \
+  -H 'x-api-key: sk_live_REPLACE_WITH_YOUR_KEY' \
+  -d '{"url":"https://example.com/long-page"}'
+```
+
+Open the returned `shortUrl` to record a click and redirect. Retrieve analytics for a link owned by the same key:
+
+```sh
+curl http://localhost:3000/api/v1/analytics/CODE \
+  -H 'Authorization: Bearer sk_live_REPLACE_WITH_YOUR_KEY'
+```
+
+Missing or unknown keys receive `401`; revoked or expired keys receive `403`. Analytics include click counts, timestamps, and user-agent metadata. IP addresses are anonymized before storage.
+
+## Deploy on Render
+
+Create a Render **Web Service** from the Git repository. Set:
+
+- Runtime: **Python 3**
+- Build command: `pip install -r requirements.txt`
+- Start command: `uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT`
+- Health check path: `/health`
+
+Configure these environment variables in Render:
+
+```text
+DATABASE_PATH=/var/data/shortener.sqlite
+ADMIN_USER=your-admin-name
+ADMIN_PASSWORD=<a long, unique password>
+```
+
+Render supplies `PORT` and `RENDER_EXTERNAL_URL`; the application uses the latter to generate short links and set the admin session cookie securely. Add a persistent disk mounted at `/var/data` so SQLite survives deploys and restarts. Render persistent disks require a paid service and limit the app to one service instance. Never commit `.env` or paste secrets into source control.

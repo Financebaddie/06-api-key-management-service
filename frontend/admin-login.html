@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin login · URL Shortener</title><link rel="stylesheet" href="/styles.css"></head><body>
+<main class="shell narrow"><section class="panel form-panel">
+  <a href="/">← Back to shortener</a><div class="eyebrow spaced">Control panel</div><h1 class="small-title">Admin login</h1>
+  <p class="muted">Sign in to manage API keys and view platform activity.</p>
+  <form id="login-form"><label>Username<input name="username" autocomplete="username" required></label>
+    <label>Password<input name="password" type="password" autocomplete="current-password" required></label>
+    <button class="primary full" type="submit">Log in</button><p class="error hidden" id="error" role="alert"></p>
+  </form>
+</section></main><script type="module" src="/login.js"></script></body></html>

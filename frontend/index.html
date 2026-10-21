@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>URL Shortener</title><link rel="stylesheet" href="/styles.css"></head><body>
+<main class="shell narrow">
+  <nav class="top"><strong>Shortlink</strong><div class="links"><a href="/api-key/request">Request an API key</a><a href="/admin">Admin panel</a></div></nav>
+  <section class="hero"><div class="eyebrow">A shorter way to share</div><h1>Make your links<br>easier to share.</h1><p>Paste a destination URL and your API key to create a short link.</p></section>
+  <form class="panel form-panel" id="shorten-form">
+    <label>Destination URL<input name="url" type="url" placeholder="https://example.com/your/long/page" required></label>
+    <label>API key<input name="apiKey" type="password" placeholder="sk_live_…" autocomplete="off" required><small>Your key is used for this request only and is not saved.</small></label>
+    <button class="primary full" type="submit">Shorten URL</button>
+    <p class="error hidden" id="error" role="alert"></p>
+    <p class="success hidden" id="result" role="status">Your short link: <a id="short-url" href="#" target="_blank" rel="noopener noreferrer"></a></p>
+  </form>
+  <p class="muted centered">Need an API key? <a href="/api-key/request">Request one</a> or ask an admin.</p>
+</main><script type="module" src="/home.js"></script></body></html>
